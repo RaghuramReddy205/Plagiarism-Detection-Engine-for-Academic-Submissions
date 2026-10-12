@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Plagiarism Detection Engine - 3D Academic Integrity Portal</title>
+  <meta name="description"
+    content="3D interactive plagiarism detection engine using Rabin-Karp rolling hashes, Winnowing fingerprints, Suffix Arrays, and Kasai LCP algorithms for academic submissions.">
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+</head>
+
+<body>
+
+  <!-- 3D Interactive WebGL Canvas Layer -->
+  <div id="webgl-background"></div>
+
+  <!-- Main Application Container -->
+  <div class="app-container">
+
+    <!-- Top Navigation Bar -->
+    <header class="navbar interactive-layer">
+      <div class="brand" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
+        <div class="brand-icon">PD</div>
+        <div class="brand-text">
+          <h1>Plagiarism Detection Engine</h1>
+          <span>Academic Submissions • DSA-3 Engine</span>
+        </div>
+      </div>
+
+      <div class="nav-controls">
+        <!-- Logged-in Student Identity Pill -->
+        <div class="student-nav-pill" id="student-nav-pill">
+          <div class="student-avatar" id="nav-student-avatar">R</div>
+          <div class="student-info-mini">
+            <span class="name" id="nav-student-name">Raghuram Reddy</span>
+            <span class="roll" id="nav-student-roll">25290090024</span>
+          </div>
+        </div>
+
+        <button class="logout-btn" id="logout-btn" title="Sign out of student portal">
+          Sign Out
+        </button>
+
+        <!-- Light / Dark Mode Toggle Switch (From Uiverse.io by njesenberger) -->
+        <div class="toggle-wrapper" title="Switch between Dark & Light Mode">
+          <input class="toggle-checkbox" type="checkbox" id="theme-toggle-checkbox">
+          <div class="toggle-container">
+            <div class="toggle-button">
+              <div class="toggle-button-circles-container">
+                <div class="toggle-button-circle"></div>
+                <div class="toggle-button-circle"></div>
+                <div class="toggle-button-circle"></div>
+                <div class="toggle-button-circle"></div>
+                <div class="toggle-button-circle"></div>
+                <div class="toggle-button-circle"></div>
+                <div class="toggle-button-circle"></div>
+                <div class="toggle-button-circle"></div>
+                <div class="toggle-button-circle"></div>
+                <div class="toggle-button-circle"></div>
+                <div class="toggle-button-circle"></div>
+                <div class="toggle-button-circle"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Floating 3D Interactive Scene Hint -->
+    <div class="scene-overlay-tag">
+      <div class="pulse-dot"></div>
+      <span>3D Knowledge Orbit • Drag to rotate & inspect nodes</span>
+    </div>
+
+    <!-- ===================================================================
+         VIEW 1: STUDENT LOGIN / AUTHENTICATION PORTAL
+         =================================================================== -->
+    <section class="auth-view interactive-layer" id="auth-view">
+      <div class="auth-card">
+        <div class="auth-header">
+          <div class="auth-badge">Academic Authentication</div>
+          <h2>Student Portal Login</h2>
+          <p>Enter your student name and roll number to access the 3D Plagiarism Detection Engine and scan documents
+            against internet repositories.</p>
+        </div>
+
+        <form class="auth-form" id="student-login-form">
+          <div class="form-group">
+            <label for="student-name-input">
+              <span>Student Full Name</span>
+              <span style="color: var(--accent-rose); font-size: 0.8rem;">*</span>
+            </label>
+            <div class="input-container">
+              <span class="input-icon">&#128100;</span>
+              <input type="text" id="student-name-input" class="form-input" placeholder="e.g. S. Raghuram Reddy"
+                required autocomplete="name">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="student-roll-input">
+              <span>University Roll Number</span>
+              <span style="color: var(--accent-rose); font-size: 0.8rem;">*</span>
+            </label>
+            <div class="input-container">
+              <span class="input-icon">&#127380;</span>
+              <input type="text" id="student-roll-input" class="form-input" placeholder="e.g. 25290090024" required
+                autocomplete="off">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="student-dept-input">
+              <span>Department & Section</span>
+            </label>
+            <div class="input-container">
+              <span class="input-icon">&#127979;</span>
+              <input type="text" id="student-dept-input" class="form-input" placeholder="CS&IT, Section 13, Team 14"
+                value="CS&IT • Section 13 • Team 14">
+            </div>
+          </div>
+
+          <button type="submit" class="auth-btn">
+            Authenticate & Enter Engine &rarr;
+          </button>
+        </form>
+
+        <!-- Quick 1-Click Demo Login Presets -->
+        <div class="auth-presets">
+          <p>Quick Fill Demo Students</p>
+          <div class="preset-btns-grid">
+            <button type="button" class="preset-btn"
+              onclick="fillDemoStudent('S. Raghuram Reddy', '25290090024', 'CS&IT • Section 13 • Team 14')">
+              <strong>S. Raghuram Reddy</strong>
+              Roll: 25290090024
+            </button>
+            <button type="button" class="preset-btn"
+              onclick="fillDemoStudent('M. Prem Manikanta Reddy', '2520090045', 'CS&IT • Section 13 • Team 14')">
+              <strong>M. Prem Manikanta</strong>
+              Roll: 2520090045
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================
+         VIEW 2: MAIN PLAGIARISM DETECTION DASHBOARD
+         =================================================================== -->
+    <main class="main-view interactive-layer" id="main-view">
+
+      <!-- Hero Header Section -->
+      <section class="engine-hero">
+        <div class="hero-info">
+          <div class="hero-tag">
+            <span>&#9889; DSA-3 Engine Active</span>
+            <span>•</span>
+            <span>Course 25CS2103E</span>
+          </div>
+          <h2>3D Academic Plagiarism Scanner</h2>
+          <p>
+            Submit your research paper, technical essay, or assignment. The engine computes Rabin-Karp rolling hashes,
+            applies Winnowing fingerprinting, and constructs Suffix & Kasai LCP arrays to search the internet and
+            identify the most similar agency or site.
+          </p>
+        </div>
+
+        <div class="hero-stats">
+          <div class="stat-box">
+            <div class="number">8+</div>
+            <div class="label">Agencies Scanned</div>
+          </div>
+          <div class="stat-box">
+            <div class="number">O(N)</div>
+            <div class="label">Kasai LCP Time</div>
+          </div>
+          <div class="stat-box">
+            <div class="number">&lt; 30%</div>
+            <div class="label">Safe Threshold</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Document Submission & Algorithm Config Grid -->
+      <section class="submission-grid">
+
+        <!-- Left: Document Input Panel -->
+        <div class="panel-card">
+          <div class="panel-title">
+            <h3>&#128196; Document Submission</h3>
+            <span>Paste text or drop file</span>
+          </div>
+
+          <!-- Quick Testing Sample Presets -->
+          <div class="presets-container">
+            <div class="presets-label">Click a preset sample for instant testing:</div>
+            <div class="preset-chips-scroll" id="preset-chips-container">
+              <!-- Dynamically populated from corpus-data.js -->
+            </div>
+          </div>
+
+          <!-- Text Area Input -->
+          <div class="text-editor-wrapper">
+            <textarea id="doc-textarea" class="document-textarea"
+              placeholder="Paste your academic document, abstract, or research paper text here..."
+              spellcheck="false"></textarea>
+
+            <!-- File Drag and Drop Zone -->
+            <div class="file-dropzone" id="file-dropzone">
+              <input type="file" id="file-input" style="display: none;" accept=".txt,.docx,.doc,.pdf,.java,.py,.cpp,.c">
+              <p>&#128206; <strong>Drag & drop a document here</strong> or click to browse</p>
+              <span>Supports .txt, .docx, .pdf, .java, .py source files</span>
+            </div>
+
+            <!-- Footer with Counts and Scan Button -->
+            <div class="editor-footer">
+              <div class="char-stats">
+                <span id="char-count">0 chars</span> • <span id="word-count">0 words</span>
+              </div>
+              <button class="scan-btn" id="scan-btn">
+                <span>&#128269; Run Plagiarism Scan & Search Internet</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Algorithmic Architecture Pipeline -->
+        <div class="panel-card">
+          <div class="panel-title">
+            <h3>&#9881; Detection Algorithms</h3>
+            <span>Main.java DSA-3 Architecture</span>
+          </div>
+
+          <div class="algo-config-box">
+            <div class="algo-card">
+              <div class="algo-card-header">
+                <h4>1. Text Preprocessing</h4>
+                <span class="algo-badge">Alphanumeric Filter</span>
+              </div>
+              <p>Normalizes input text by lowering case, removing punctuation, and collapsing whitespace to eliminate
+                formatting evasion.</p>
+            </div>
+
+            <div class="algo-card">
+              <div class="algo-card-header">
+                <h4>2. Rabin-Karp Rolling Hash</h4>
+                <span class="algo-badge">Dual Modulo (K=5)</span>
+              </div>
+              <p>Computes dual 64-bit polynomial hashes with BASE1=911382323, BASE2=972663749 over 5-gram token
+                sequences with O(1) sliding transitions.</p>
+            </div>
+
+            <div class="algo-card">
+              <div class="algo-card-header">
+                <h4>3. Winnowing Algorithm</h4>
+                <span class="algo-badge">Window W=4</span>
+              </div>
+              <p>Selects representative minimum hashes in sliding windows of size 4, bounding memory overhead while
+                guaranteeing detection of duplicate matches.</p>
+            </div>
+
+            <div class="algo-card">
+              <div class="algo-card-header">
+                <h4>4. Suffix Array & Kasai LCP</h4>
+                <span class="algo-badge">Prefix Doubling + O(N) LCP</span>
+              </div>
+              <p>Sorts suffixes lexicographically and computes Longest Common Prefix arrays using Kasai's algorithm to
+                pinpoint maximal contiguous plagiarized substrings.</p>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- 5-Stage Algorithmic Scanning Progress HUD -->
+      <section class="scan-progress-hud" id="scan-progress-hud">
+        <div class="progress-header">
+          <div class="progress-status-text" id="progress-status-text">
+            <span class="spinner"></span> Initializing detection pipeline...
+          </div>
+          <span style="font-family: var(--font-mono); font-size: 0.85rem; color: var(--accent-cyan);">DSA-3
+            ENGINE</span>
+        </div>
+
+        <div class="progress-bar-track">
+          <div class="progress-bar-fill" id="progress-bar-fill"></div>
+        </div>
+
+        <div class="progress-steps-grid">
+          <div class="p-step" id="step-1">1. Preprocessing</div>
+          <div class="p-step" id="step-2">2. Rabin-Karp & Winnow</div>
+          <div class="p-step" id="step-3">3. Internet Repositories</div>
+          <div class="p-step" id="step-4">4. Kasai LCP Substrings</div>
+          <div class="p-step" id="step-5">5. Similarity Ranking</div>
+        </div>
+      </section>
+
+      <!-- ===================================================================
+           RESULTS DASHBOARD & "WHICH AGENCY IS MORE SIMILAR"
+           =================================================================== -->
+      <section class="results-section" id="results-section">
+
+        <!-- 1. SPOTLIGHT CARD: MOST SIMILAR AGENCY OR SITE -->
+        <div class="top-agency-spotlight">
+          <div class="spotlight-header-badge">
+            &#127942; Primary Match Discovered: Most Similar Agency / Site
+          </div>
+
+          <div class="spotlight-content-grid">
+            <div class="agency-main-details">
+              <h2 id="top-agency-name">IEEE Xplore Digital Library</h2>
+
+              <div class="agency-meta-bar">
+                <span class="agency-domain-chip" id="top-agency-domain">ieeexplore.ieee.org</span>
+                <span class="agency-tier-chip" id="top-agency-tier">Tier 1 Peer-Reviewed Conference</span>
+              </div>
+
+              <p style="color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 1rem;"
+                id="top-agency-description">
+                Institute of Electrical and Electronics Engineers scientific research database.
+              </p>
+
+              <!-- Matched Publication Card -->
+              <div class="matched-paper-callout">
+                <div class="label">Matched Publication / Source Citation</div>
+                <div class="paper-title" id="top-matched-title">Distributed Consensus and Byzantine Fault Tolerance in
+                  Scalable Blockchain Networks</div>
+                <div class="paper-citation" id="top-matched-citation">H. Zhang, K. Patel, L. Chen • IEEE Transactions,
+                  2024 • DOI: 10.1109/TPDS.2024.3129845</div>
+              </div>
+            </div>
+
+            <!-- Circular Similarity Gauge -->
+            <div class="score-gauge-card">
+              <div class="circular-gauge">
+                <svg viewBox="0 0 140 140">
+                  <circle class="gauge-bg" cx="70" cy="70" r="60"></circle>
+                  <circle class="gauge-fill" id="gauge-fill-circle" cx="70" cy="70" r="60"></circle>
+                </svg>
+                <div class="gauge-text">
+                  <span class="gauge-percent" id="gauge-percent">0%</span>
+                  <span class="gauge-label">Similarity</span>
+                </div>
+              </div>
+
+              <div class="risk-badge danger" id="risk-badge">
+                Critical Alert (> 30%)
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. ALL AGENCIES COMPARISON LEADERBOARD -->
+        <div class="agencies-leaderboard-section">
+          <div class="section-title">
+            <h3>Internet Agency & Repository Leaderboard</h3>
+            <p>Ranked breakdown comparing your document across major digital academic repositories</p>
+          </div>
+
+          <div class="agency-cards-grid" id="agency-cards-grid">
+            <!-- Dynamically populated with all agencies -->
+          </div>
+        </div>
+
+        <!-- 3. SIDE-BY-SIDE DUAL HIGHLIGHTED DIFF INSPECTOR -->
+        <div class="diff-comparison-section">
+          <div class="section-title">
+            <h3>Side-by-Side Highlighted Substring Inspector</h3>
+            <p>Maximal matching substrings detected using Kasai LCP Array and Suffix Array indexing</p>
+          </div>
+
+          <div class="dual-viewer-container">
+            <!-- Student Document Column -->
+            <div class="doc-viewer-col">
+              <div class="doc-col-header">
+                <h4>&#127891; Student Submission</h4>
+                <span class="col-badge">Your Document</span>
+              </div>
+              <div class="doc-content-box" id="student-doc-box"></div>
+            </div>
+
+            <!-- Target Agency Document Column -->
+            <div class="doc-viewer-col">
+              <div class="doc-col-header">
+                <h4 id="target-col-title">&#127760; IEEE Xplore (Source Reference)</h4>
+                <span class="col-badge" id="target-col-badge">Matching Excerpts</span>
+              </div>
+              <div class="doc-content-box" id="target-doc-box"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. ALGORITHM DIAGNOSTICS & EXPORT -->
+        <div class="diagnostics-section">
+          <div class="section-title">
+            <h3>Algorithmic Execution Metrics</h3>
+            <p>Verification data points generated during string analysis</p>
+          </div>
+
+          <div class="diagnostics-grid">
+            <div class="diag-stat-card">
+              <div class="val" id="diag-tokens">0</div>
+              <div class="desc">Normalized Characters</div>
+            </div>
+            <div class="diag-stat-card">
+              <div class="val" id="diag-kgrams">0</div>
+              <div class="desc">Rabin-Karp K-Grams</div>
+            </div>
+            <div class="diag-stat-card">
+              <div class="val" id="diag-fingerprints">0</div>
+              <div class="desc">Winnowed Fingerprints</div>
+            </div>
+            <div class="diag-stat-card">
+              <div class="val" id="diag-time">0 ms</div>
+              <div class="desc">Execution Time</div>
+            </div>
+          </div>
+
+          <!-- Actions Bar -->
+          <div class="export-actions-bar">
+            <button class="action-btn-outline" id="open-cert-btn">
+              <span>&#128195; Generate Academic Integrity Certificate</span>
+            </button>
+          </div>
+        </div>
+
+      </section>
+
+    </main>
+
+  </div> <!-- End .app-container -->
+
+  <!-- ===================================================================
+       OFFICIAL ACADEMIC INTEGRITY CERTIFICATE MODAL
+       =================================================================== -->
+  <div class="modal-backdrop" id="cert-modal">
+    <div class="report-certificate-modal">
+      <div class="cert-header" style="position: relative;">
+        <button id="close-cert-x-btn" onclick="document.getElementById('cert-modal').classList.remove('active')"
+          style="position: absolute; top: 0; right: 0; background: none; border: none; font-size: 1.5rem; color: var(--text-muted); cursor: pointer; padding: 0.25rem 0.5rem;"
+          title="Close modal">&times;</button>
+        <span style="font-size: 0.75rem; color: var(--accent-cyan); font-weight: 700; text-transform: uppercase;">
+          Department of Computer Science & Information Technology
+        </span>
+        <h3>Academic Plagiarism Assessment Certificate</h3>
+        <p>Data Structures and Algorithms - 3 (25CS2103E) • Academic Year 2026-2027</p>
+      </div>
+
+      <div class="cert-body-grid">
+        <div class="cert-meta-item">
+          <div class="key">Student Name</div>
+          <div class="value" id="cert-student-name">S. Raghuram Reddy</div>
+        </div>
+        <div class="cert-meta-item">
+          <div class="key">Roll Number</div>
+          <div class="value" id="cert-student-roll">25290090024</div>
+        </div>
+        <div class="cert-meta-item">
+          <div class="key">Department & Section</div>
+          <div class="value" id="cert-dept">CS&IT • Section 13 • Team 14</div>
+        </div>
+        <div class="cert-meta-item">
+          <div class="key">Scan Timestamp</div>
+          <div class="value" id="cert-date">October 8, 2026</div>
+        </div>
+        <div class="cert-meta-item">
+          <div class="key">Overall Similarity Score</div>
+          <div class="value" style="color: var(--accent-cyan); font-size: 1.25rem;" id="cert-score">0%</div>
+        </div>
+        <div class="cert-meta-item">
+          <div class="key">Primary Similar Agency / Site</div>
+          <div class="value" id="cert-top-agency">IEEE Xplore</div>
+        </div>
+        <div class="cert-meta-item">
+          <div class="key">Shared Winnowing Fingerprints</div>
+          <div class="value" id="cert-fingerprints">0</div>
+        </div>
+        <div class="cert-meta-item">
+          <div class="key">Evaluation Status</div>
+          <div class="value" id="cert-status">Safe</div>
+        </div>
+      </div>
+
+      <div
+        style="border-top: 1px solid var(--card-border); padding-top: 1.25rem; font-size: 0.8rem; color: var(--text-secondary); line-height: 1.5;">
+        This report certifies that the academic submission was analyzed utilizing Rabin-Karp Dual Modulo Rolling Hashes,
+        Winnowing Fingerprinting, and Kasai Longest Common Prefix (LCP) Array comparison against global academic
+        indexes.
+      </div>
+
+      <div class="export-actions-bar" style="margin-top: 1.5rem;">
+        <button class="action-btn-outline" id="close-cert-btn"
+          onclick="document.getElementById('cert-modal').classList.remove('active')">Close</button>
+        <button class="scan-btn" id="print-cert-btn" onclick="window.print()"
+          style="padding: 0.65rem 1.25rem; font-size: 0.9rem;">
+          &#128424; Print / Save PDF
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts: Loaded in dependency order -->
+  <script src="three.min.js"></script>
+  <script src="corpus-data.js"></script>
+  <script src="algorithms.js"></script>
+  <script src="three-scene.js"></script>
+  <script src="app.js"></script>
+
+</body>
+
+</html>
